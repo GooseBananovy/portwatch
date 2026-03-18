@@ -1,11 +1,11 @@
 package docker
 
 type Container struct {
-	Name     string
-	Status   string
-	Cpu      float64
-	RamUsed  uint64
-	RamTotal uint64
+	Name     string  `json:"name"`
+	Status   string  `json:"status"`
+	Cpu      float64 `json:"cpu"`
+	RamUsed  uint64  `json:"ram_used"`
+	RamTotal uint64  `json:"ram_total"`
 }
 
 type Cons []Container

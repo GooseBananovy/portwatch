@@ -1,31 +1,31 @@
 package sys
 
 type Cpu struct {
-	Count     uint
-	Loads     []float64
-	TotalLoad float64
+	Count     uint      `json:"count_cores"`
+	Loads     []float64 `json:"loads"`
+	TotalLoad float64   `json:"total_load"`
 }
 
 type Ram struct {
-	TotalBytes     uint64
-	UsedBytes      uint64
-	AvailableBytes uint64
+	TotalBytes     uint64 `json:"total"`
+	UsedBytes      uint64 `json:"used"`
+	AvailableBytes uint64 `json:"available"`
 }
 
 type Disk []Partition
 
 type Partition struct {
-	Path       string
-	TotalBytes uint64
-	UsedBytes  uint64
-	FreeBytes  uint64
+	Path       string `json:"path"`
+	TotalBytes uint64 `json:"total"`
+	UsedBytes  uint64 `json:"used"`
+	FreeBytes  uint64 `json:"free"`
 }
 
 type UptimeSec uint64
 
 type Stats struct {
-	Cpu       Cpu
-	Ram       Ram
-	Disk      Disk
-	UptimeSec UptimeSec
+	Cpu       Cpu       `json:"cpu"`
+	Ram       Ram       `json:"ram"`
+	Disk      Disk      `json:"disk"`
+	UptimeSec UptimeSec `json:"uptime"`
 }

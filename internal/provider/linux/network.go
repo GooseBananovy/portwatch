@@ -22,6 +22,7 @@ func (lp *LinuxProvider) Network(ctx context.Context) (network.Stats, error) {
 	var outgoingBFirstScreen uint64
 
 	for line := range strings.SplitSeq(string(rawData), "\n") {
+		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "wlan") || strings.HasPrefix(line, "eth") || strings.HasPrefix(line, "ens") || strings.HasPrefix(line, "enp") {
 
 			ingoingB, outgoingB, err := parseNetDevLine(line)
@@ -44,6 +45,7 @@ func (lp *LinuxProvider) Network(ctx context.Context) (network.Stats, error) {
 	}
 
 	for line := range strings.SplitSeq(string(rawData), "\n") {
+		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "wlan") || strings.HasPrefix(line, "eth") || strings.HasPrefix(line, "ens") || strings.HasPrefix(line, "enp") {
 			ingoingB, outgoingB, err := parseNetDevLine(line)
 			if err != nil {

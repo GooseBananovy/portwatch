@@ -65,7 +65,7 @@ func (lp *LinuxProvider) Ram(ctx context.Context) (sys.Ram, error) {
 	}
 
 	return sys.Ram{
-		TotalBytes:     uint64(memTotal) * 1024, //TODO: Maybe /proc/meminfo can have size not only in kB, should I check it?
+		TotalBytes:     uint64(memTotal) * 1024,
 		AvailableBytes: uint64(memAvailable) * 1024,
 		UsedBytes:      (uint64(memTotal) - uint64(memAvailable)) * 1024,
 	}, nil
@@ -139,28 +139,18 @@ func parseCpuLine(line string) (uint64, uint64, error) {
 	var idle uint64
 	var total uint64
 	for i, strVal := range strings.Fields(line)[1:] {
+		val, err := strconv.ParseInt(strVal, 10, 64)
+		if err != nil {
+			return 0, 0, fmt.Errorf("failed to parse string to integer: %w", err)
+		}
+
+		if val < 0 {
+			return 0, 0, errors.New("got negative time")
+		}
+
+		total += uint64(val)
 		if i == 3 {
-			val, err := strconv.ParseInt(strVal, 10, 64)
-			if err != nil {
-				return 0, 0, fmt.Errorf("failed to parse string to integer: %w", err)
-			}
-
-			if val < 0 {
-				return 0, 0, errors.New("got negative time")
-			}
-
 			idle += uint64(val)
-		} else {
-			val, err := strconv.ParseInt(strVal, 10, 64)
-			if err != nil {
-				return 0, 0, fmt.Errorf("failed to parse string to integer: %w", err)
-			}
-
-			if val < 0 {
-				return 0, 0, errors.New("got negative time")
-			}
-
-			total += uint64(val)
 		}
 	}
 	return total, idle, nil
