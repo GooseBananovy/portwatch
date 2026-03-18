@@ -1,0 +1,5 @@
+bin/
+.env
+*.env
+project.txt
+project.py
