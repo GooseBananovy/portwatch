@@ -160,7 +160,7 @@ func parseCpuLine(line string) (uint64, uint64, error) {
 }
 
 func (lp *LinuxProvider) Disk(ctx context.Context) (sys.Disk, error) {
-	pathMounts := lp.procBase + "/mounts"
+	pathMounts := lp.procBase + "/1/mounts"
 	rawData, err := os.ReadFile(pathMounts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read %s file: %w", pathMounts, err)
