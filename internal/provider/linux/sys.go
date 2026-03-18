@@ -165,7 +165,11 @@ func (lp *LinuxProvider) Disk(ctx context.Context) (sys.Disk, error) {
 	var paths []string
 	for line := range strings.SplitSeq(string(rawData), "\n") {
 		if strings.HasPrefix(line, "/dev/") {
-			paths = append(paths, strings.Fields(line)[1])
+			path := strings.Fields(line)[1]
+			if strings.HasPrefix(path, "/etc/") || strings.HasPrefix(path, "/proc/") {
+				continue
+			}
+			paths = append(paths, path)
 		}
 	}
 

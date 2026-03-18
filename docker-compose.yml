@@ -3,6 +3,7 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile.agent
+    pid: host
     ports:
       - "90:9090"
     volumes:
