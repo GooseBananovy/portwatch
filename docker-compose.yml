@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile.agent
     environment:
       - PROC_BASE=/host/proc
+      - PID1_PROC_BASE=/host/proc/1
     ports:
       - "90:9090"
     volumes:

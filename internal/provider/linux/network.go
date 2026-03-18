@@ -12,7 +12,7 @@ import (
 )
 
 func (lp *LinuxProvider) Network(ctx context.Context) (network.Stats, error) {
-	pathNetDev := lp.procBase + "/1/net/dev"
+	pathNetDev := lp.netProcBase + "/net/dev"
 	rawData, err := os.ReadFile(pathNetDev)
 	if err != nil {
 		return network.Stats{}, fmt.Errorf("failed to read %s file: %w", pathNetDev, err)
@@ -60,7 +60,7 @@ func (lp *LinuxProvider) Network(ctx context.Context) (network.Stats, error) {
 	traffic.IngoingBPS -= ingoingBFirstScreen
 	traffic.OutgoingBPS -= outgoingBFirstScreen
 
-	pathNetTCP := lp.procBase + "/1/net/tcp"
+	pathNetTCP := lp.netProcBase + "/net/tcp"
 	rawData, err = os.ReadFile(pathNetTCP)
 	if err != nil {
 		return network.Stats{}, fmt.Errorf("failed to read %s file: %w", pathNetTCP, err)
