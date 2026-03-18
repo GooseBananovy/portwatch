@@ -13,9 +13,10 @@ import (
 )
 
 func (lp *LinuxProvider) Network(ctx context.Context) (network.Stats, error) {
-	rawData, err := os.ReadFile("/proc/net/dev")
+	pathNetDev := lp.procBase + "/net/dev"
+	rawData, err := os.ReadFile(pathNetDev)
 	if err != nil {
-		return network.Stats{}, fmt.Errorf("failed to read /proc/net/dev file: %w", err)
+		return network.Stats{}, fmt.Errorf("failed to read %s file: %w", pathNetDev, err)
 	}
 
 	var ingoingBFirstScreen uint64
@@ -39,9 +40,9 @@ func (lp *LinuxProvider) Network(ctx context.Context) (network.Stats, error) {
 
 	time.Sleep(1 * time.Second)
 
-	rawData, err = os.ReadFile("/proc/net/dev")
+	rawData, err = os.ReadFile(pathNetDev)
 	if err != nil {
-		return network.Stats{}, fmt.Errorf("failed to read /proc/net/dev file: %w", err)
+		return network.Stats{}, fmt.Errorf("failed to read %s file: %w", pathNetDev, err)
 	}
 
 	for line := range strings.SplitSeq(string(rawData), "\n") {
@@ -60,9 +61,10 @@ func (lp *LinuxProvider) Network(ctx context.Context) (network.Stats, error) {
 	traffic.IngoingBPS -= ingoingBFirstScreen
 	traffic.OutgoingBPS -= outgoingBFirstScreen
 
-	rawData, err = os.ReadFile("/proc/net/tcp")
+	pathNetTCP := lp.procBase + "/net/tcp"
+	rawData, err = os.ReadFile(pathNetTCP)
 	if err != nil {
-		return network.Stats{}, fmt.Errorf("failed to read /proc/net/tcp file: %w", err)
+		return network.Stats{}, fmt.Errorf("failed to read %s file: %w", pathNetTCP, err)
 	}
 
 	var tcpCount network.TCPCount
@@ -82,7 +84,7 @@ func (lp *LinuxProvider) Network(ctx context.Context) (network.Stats, error) {
 func parseNetDevLine(line string) (uint64, uint64, error) {
 	ingoingB, err := strconv.ParseInt(strings.Fields(line)[1], 10, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to convert /proc/net/dev content to int: %w", err)
+		return 0, 0, fmt.Errorf("failed to convert net dev content to int: %w", err)
 	}
 
 	if ingoingB < 0 {
@@ -91,7 +93,7 @@ func parseNetDevLine(line string) (uint64, uint64, error) {
 
 	outgoingB, err := strconv.ParseInt(strings.Fields(line)[9], 10, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to convert /proc/net/dev content to int: %w", err)
+		return 0, 0, fmt.Errorf("failed to convert net dev content to int: %w", err)
 	}
 
 	if outgoingB < 0 {

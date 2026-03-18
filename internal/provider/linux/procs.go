@@ -14,15 +14,15 @@ import (
 )
 
 func (lp *LinuxProvider) Procs(ctx context.Context) (procs.Procs, error) {
-	entries, err := os.ReadDir("/proc")
+	entries, err := os.ReadDir(lp.procBase)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get files entries in /proc dir: %w", err)
+		return nil, fmt.Errorf("failed to get files entries in %s dir: %w", lp.procBase, err)
 	}
 
 	var result procs.Procs
 	procWorked := make(map[uint64]uint64)
 
-	cpuWorkedFirstScreen, err := cpuWorked()
+	cpuWorkedFirstScreen, err := cpuWorked(lp.procBase)
 	if err != nil {
 		return nil, err
 	}
@@ -36,8 +36,8 @@ func (lp *LinuxProvider) Procs(ctx context.Context) (procs.Procs, error) {
 		if _, err = strconv.Atoi(entry.Name()); entry.IsDir() && err == nil {
 			var proc procs.Proc
 
-			fileStatus := "/proc/" + entry.Name() + "/status"
-			fileStat := "/proc/" + entry.Name() + "/stat"
+			fileStatus := lp.procBase + "/" + entry.Name() + "/status"
+			fileStat := lp.procBase + "/" + entry.Name() + "/stat"
 
 			rawInfo, err := os.ReadFile(fileStatus)
 			if err != nil {
@@ -76,14 +76,14 @@ func (lp *LinuxProvider) Procs(ctx context.Context) (procs.Procs, error) {
 
 	time.Sleep(1 * time.Second)
 
-	cpuWorkedSecondScreen, err := cpuWorked()
+	cpuWorkedSecondScreen, err := cpuWorked(lp.procBase)
 	if err != nil {
 		return nil, err
 	}
 
 	for i := range result {
 		pid := result[i].Pid
-		fileStat := "/proc/" + strconv.FormatUint(pid, 10) + "/stat"
+		fileStat := lp.procBase + "/" + strconv.FormatUint(pid, 10) + "/stat"
 
 		utime, stime, err := parseProcStatFile(fileStat)
 		if err != nil {
@@ -130,15 +130,16 @@ func parseProcStatFile(path string) (uint64, uint64, error) {
 	return uint64(utime), uint64(stime), nil
 }
 
-func cpuWorked() (uint64, error) {
-	rawData, err := os.ReadFile("/proc/stat")
+func cpuWorked(procBase string) (uint64, error) {
+	pathStat := procBase + "/stat"
+	rawData, err := os.ReadFile(pathStat)
 	if err != nil {
-		return 0, fmt.Errorf("failed to read /proc/stat file: %w", err)
+		return 0, fmt.Errorf("failed to read %s file: %w", pathStat, err)
 	}
 
 	line := strings.Split(string(rawData), "\n")[0]
 	if len(line) == 0 || strings.Fields(line)[0] != "cpu" {
-		return 0, fmt.Errorf("invalid content in /proc/stat file: %w", err)
+		return 0, fmt.Errorf("invalid content in %s file: %w", pathStat, err)
 	}
 
 	var total uint64

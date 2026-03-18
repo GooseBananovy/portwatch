@@ -15,14 +15,15 @@ import (
 )
 
 func (lp *LinuxProvider) Uptime(ctx context.Context) (sys.UptimeSec, error) {
-	rawData, err := os.ReadFile("/proc/uptime")
+	pathUptime := lp.procBase + "/uptime"
+	rawData, err := os.ReadFile(pathUptime)
 	if err != nil {
-		return 0, fmt.Errorf("failed to read /proc/uptime file: %w", err)
+		return 0, fmt.Errorf("failed to read %s file: %w", pathUptime, err)
 	}
 
 	uptime, err := strconv.ParseFloat(strings.Fields(string(rawData))[0], 64)
 	if err != nil {
-		return 0, fmt.Errorf("failed to convert /proc/uptime content to float: %w", err)
+		return 0, fmt.Errorf("failed to convert %s content to float: %w", pathUptime, err)
 	}
 
 	if uptime <= 0 {
@@ -33,9 +34,10 @@ func (lp *LinuxProvider) Uptime(ctx context.Context) (sys.UptimeSec, error) {
 }
 
 func (lp *LinuxProvider) Ram(ctx context.Context) (sys.Ram, error) {
-	rawData, err := os.ReadFile("/proc/meminfo")
+	pathMeminfo := lp.procBase + "/meminfo"
+	rawData, err := os.ReadFile(pathMeminfo)
 	if err != nil {
-		return sys.Ram{}, fmt.Errorf("failed to read /proc/meminfo file: %w", err)
+		return sys.Ram{}, fmt.Errorf("failed to read %s file: %w", pathMeminfo, err)
 	}
 
 	var memTotal int64
@@ -47,14 +49,14 @@ func (lp *LinuxProvider) Ram(ctx context.Context) (sys.Ram, error) {
 			memTotal, err = strconv.ParseInt(strings.Fields(line)[1], 10, 64)
 
 			if err != nil {
-				return sys.Ram{}, fmt.Errorf("failed to convert /proc/meminfo content to int: %w", err)
+				return sys.Ram{}, fmt.Errorf("failed to convert %s content to int: %w", pathMeminfo, err)
 			}
 
 		} else if strings.HasPrefix(line, "MemAvailable:") {
 			memAvailable, err = strconv.ParseInt(strings.Fields(line)[1], 10, 64)
 
 			if err != nil {
-				return sys.Ram{}, fmt.Errorf("failed to convert /proc/meminfo content to int: %w", err)
+				return sys.Ram{}, fmt.Errorf("failed to convert %s content to int: %w", pathMeminfo, err)
 			}
 
 		}
@@ -72,9 +74,10 @@ func (lp *LinuxProvider) Ram(ctx context.Context) (sys.Ram, error) {
 }
 
 func (lp *LinuxProvider) Cpu(ctx context.Context) (sys.Cpu, error) {
-	rawData, err := os.ReadFile("/proc/stat")
+	pathStat := lp.procBase + "/stat"
+	rawData, err := os.ReadFile(pathStat)
 	if err != nil {
-		return sys.Cpu{}, fmt.Errorf("failed to read /proc/stat file: %w", err)
+		return sys.Cpu{}, fmt.Errorf("failed to read %s file: %w", pathStat, err)
 	}
 
 	var count uint
@@ -103,9 +106,9 @@ func (lp *LinuxProvider) Cpu(ctx context.Context) (sys.Cpu, error) {
 
 	time.Sleep(1 * time.Second)
 
-	rawData, err = os.ReadFile("/proc/stat")
+	rawData, err = os.ReadFile(pathStat)
 	if err != nil {
-		return sys.Cpu{}, fmt.Errorf("failed to read /proc/stat file: %w", err)
+		return sys.Cpu{}, fmt.Errorf("failed to read %s file: %w", pathStat, err)
 	}
 
 	var loads []float64
@@ -157,19 +160,16 @@ func parseCpuLine(line string) (uint64, uint64, error) {
 }
 
 func (lp *LinuxProvider) Disk(ctx context.Context) (sys.Disk, error) {
-	rawData, err := os.ReadFile("/proc/mounts")
+	pathMounts := lp.procBase + "/mounts"
+	rawData, err := os.ReadFile(pathMounts)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read /proc/mounts file: %w", err)
+		return nil, fmt.Errorf("failed to read %s file: %w", pathMounts, err)
 	}
 
 	var paths []string
 	for line := range strings.SplitSeq(string(rawData), "\n") {
 		if strings.HasPrefix(line, "/dev/") {
-			path := strings.Fields(line)[1]
-			if strings.HasPrefix(path, "/etc/") || strings.HasPrefix(path, "/proc/") {
-				continue
-			}
-			paths = append(paths, path)
+			paths = append(paths, strings.Fields(line)[1])
 		}
 	}
 

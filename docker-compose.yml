@@ -3,9 +3,10 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile.agent
-    pid: host
-    network_mode: host
+    environment:
+      - PROC_BASE=/host/proc
     ports:
       - "90:9090"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /proc:/host/proc:ro

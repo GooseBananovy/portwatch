@@ -1,7 +1,17 @@
 package linux
 
-type LinuxProvider struct{}
+import "os"
+
+type LinuxProvider struct {
+	procBase string
+}
 
 func NewLinuxProvider() *LinuxProvider {
-	return &LinuxProvider{}
+	procBase := os.Getenv("PROC_BASE")
+	if len(procBase) == 0 {
+		procBase = "/proc"
+	}
+	return &LinuxProvider{
+		procBase: procBase,
+	}
 }
