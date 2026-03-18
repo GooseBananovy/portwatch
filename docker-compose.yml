@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile.agent
     pid: host
+    network_mode: host
     ports:
       - "90:9090"
     volumes:
