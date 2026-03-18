@@ -2,7 +2,6 @@ package linux
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -48,7 +47,7 @@ func (lp *LinuxProvider) Procs(ctx context.Context) (procs.Procs, error) {
 				if strings.HasPrefix(line, "Name") {
 					proc.Name = strings.Fields(line)[1]
 				} else if strings.HasPrefix(line, "Pid") {
-					proc.Pid, err = strconv.ParseUint(strings.Fields(line)[1], 10, 64) //TODO: Чтобы убрать все проверки на negative бесполезные, надо везде сделать так просто
+					proc.Pid, err = strconv.ParseUint(strings.Fields(line)[1], 10, 64)
 					if err != nil {
 						return nil, fmt.Errorf("failed to convert pid to uint: %w", err)
 					}
@@ -113,21 +112,17 @@ func parseProcStatFile(path string) (uint64, uint64, error) {
 	line := string(rawInfo)
 	lineArgs := strings.Fields(line[strings.LastIndex(line, ")")+1:])
 
-	utime, err := strconv.ParseInt(lineArgs[11], 10, 64)
+	utime, err := strconv.ParseUint(lineArgs[11], 10, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to convert utime to int: %w", err)
+		return 0, 0, fmt.Errorf("failed to convert utime to uint: %w", err)
 	}
 
-	stime, err := strconv.ParseInt(lineArgs[12], 10, 64)
+	stime, err := strconv.ParseUint(lineArgs[12], 10, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to convert stime to int: %w", err)
+		return 0, 0, fmt.Errorf("failed to convert stime to uint: %w", err)
 	}
 
-	if utime < 0 || stime < 0 {
-		return 0, 0, errors.New("got negative time")
-	}
-
-	return uint64(utime), uint64(stime), nil
+	return utime, stime, nil
 }
 
 func cpuWorked(procBase string) (uint64, error) {
@@ -145,16 +140,12 @@ func cpuWorked(procBase string) (uint64, error) {
 	var total uint64
 	for i, strVal := range strings.Fields(line)[1:] {
 		if i != 3 {
-			val, err := strconv.ParseInt(strVal, 10, 64)
+			val, err := strconv.ParseUint(strVal, 10, 64)
 			if err != nil {
 				return 0, fmt.Errorf("failed to parse string to integer: %w", err)
 			}
 
-			if val < 0 {
-				return 0, errors.New("got negative time")
-			}
-
-			total += uint64(val)
+			total += val
 		}
 	}
 

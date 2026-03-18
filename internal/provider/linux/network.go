@@ -2,7 +2,6 @@ package linux
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -82,22 +81,15 @@ func (lp *LinuxProvider) Network(ctx context.Context) (network.Stats, error) {
 }
 
 func parseNetDevLine(line string) (uint64, uint64, error) {
-	ingoingB, err := strconv.ParseInt(strings.Fields(line)[1], 10, 64)
+	ingoingB, err := strconv.ParseUint(strings.Fields(line)[1], 10, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to convert net dev content to int: %w", err)
+		return 0, 0, fmt.Errorf("failed to convert net dev content to uint: %w", err)
 	}
 
-	if ingoingB < 0 {
-		return 0, 0, errors.New("got negative recieve bytes quantity")
-	}
-
-	outgoingB, err := strconv.ParseInt(strings.Fields(line)[9], 10, 64)
+	outgoingB, err := strconv.ParseUint(strings.Fields(line)[9], 10, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to convert net dev content to int: %w", err)
+		return 0, 0, fmt.Errorf("failed to convert net dev content to uint: %w", err)
 	}
 
-	if outgoingB < 0 {
-		return 0, 0, errors.New("got negative transmit bytes quantity")
-	}
-	return uint64(ingoingB), uint64(outgoingB), nil
+	return ingoingB, outgoingB, nil
 }

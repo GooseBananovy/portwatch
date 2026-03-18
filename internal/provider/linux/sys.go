@@ -40,23 +40,22 @@ func (lp *LinuxProvider) Ram(ctx context.Context) (sys.Ram, error) {
 		return sys.Ram{}, fmt.Errorf("failed to read %s file: %w", pathMeminfo, err)
 	}
 
-	var memTotal int64
-	var memAvailable int64
+	var memTotal uint64
+	var memAvailable uint64
 
-	//TODO: check what is SplitSeq here and iterator in go
 	for line := range strings.SplitSeq((string(rawData)), "\n") {
 		if strings.HasPrefix(line, "MemTotal:") {
-			memTotal, err = strconv.ParseInt(strings.Fields(line)[1], 10, 64)
+			memTotal, err = strconv.ParseUint(strings.Fields(line)[1], 10, 64)
 
 			if err != nil {
-				return sys.Ram{}, fmt.Errorf("failed to convert %s content to int: %w", pathMeminfo, err)
+				return sys.Ram{}, fmt.Errorf("failed to convert %s content to uint: %w", pathMeminfo, err)
 			}
 
 		} else if strings.HasPrefix(line, "MemAvailable:") {
-			memAvailable, err = strconv.ParseInt(strings.Fields(line)[1], 10, 64)
+			memAvailable, err = strconv.ParseUint(strings.Fields(line)[1], 10, 64)
 
 			if err != nil {
-				return sys.Ram{}, fmt.Errorf("failed to convert %s content to int: %w", pathMeminfo, err)
+				return sys.Ram{}, fmt.Errorf("failed to convert %s content to uint: %w", pathMeminfo, err)
 			}
 
 		}
@@ -67,9 +66,9 @@ func (lp *LinuxProvider) Ram(ctx context.Context) (sys.Ram, error) {
 	}
 
 	return sys.Ram{
-		TotalBytes:     uint64(memTotal) * 1024,
-		AvailableBytes: uint64(memAvailable) * 1024,
-		UsedBytes:      (uint64(memTotal) - uint64(memAvailable)) * 1024,
+		TotalBytes:     memTotal * 1024,
+		AvailableBytes: memAvailable * 1024,
+		UsedBytes:      (memTotal - memAvailable) * 1024,
 	}, nil
 }
 
@@ -142,18 +141,14 @@ func parseCpuLine(line string) (uint64, uint64, error) {
 	var idle uint64
 	var total uint64
 	for i, strVal := range strings.Fields(line)[1:] {
-		val, err := strconv.ParseInt(strVal, 10, 64)
+		val, err := strconv.ParseUint(strVal, 10, 64)
 		if err != nil {
 			return 0, 0, fmt.Errorf("failed to parse string to integer: %w", err)
 		}
 
-		if val < 0 {
-			return 0, 0, errors.New("got negative time")
-		}
-
-		total += uint64(val)
+		total += val
 		if i == 3 {
-			idle += uint64(val)
+			idle += val
 		}
 	}
 	return total, idle, nil
